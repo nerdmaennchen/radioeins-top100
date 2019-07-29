@@ -2,6 +2,7 @@ from robobrowser import RoboBrowser
 import pickle
 from pathlib import Path
 import sys
+import re
 import os
 
 def extractVotes(browser):
@@ -64,17 +65,59 @@ def fetch(url):
         browser.back()
     return total_scores
 
+def cache_categories(url, path, cache_file):
+    if not cache_file.is_file():
+        browser = RoboBrowser(history=True, parser="html.parser")
+        browser.open('%s%s' % (url, path))
+        links = browser.select('a.uebersicht')
+        found_links = set();
+        for l in links:
+            ll = re.findall("^%s(.*)/index.html$" % path, l['href']) 
+            if len(ll) == 1:
+                found_links.add(ll[0])
+
+        if not os.path.exists("cache"):
+            os.makedirs("cache")
+        with cache_file.open('wb') as f:
+            pickle.dump(found_links, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+def load_categories(url, path):
+    cache_file = Path("cache/categories")
+    cache_categories(url, path, cache_file)
+
+    if not cache_file.is_file():
+        cache_categories(url, path, cache_file);
+
+    with cache_file.open('rb') as f:
+        found_links = pickle.load(f)
+    return found_links
+
+
 if __name__ == '__main__':
+    url = 'https://www.radioeins.de'
+    path = '/musik/die-100-besten-2019/'
+
+    categories = load_categories(url, path)
     if len(sys.argv) != 2:
-        print("usage: python fetch [list]")
+        print("usage: python fetch.py [--list | <category>]")
         exit(-1)
+
     target = sys.argv[1]
+    if target == "--list":
+        print("category:")
+        for l in categories:
+            print("  - %s" % l)
+        exit(0)
+
+    if target not in categories:
+        print("error: invalid category")
+        exit(0);
 
     cache_file = Path("cache/%s_cached_results" % target)
     results_file = Path("%s_results" % target)
 
     if not cache_file.is_file():
-        total_scores = fetch('https://www.radioeins.de/musik/die-100-besten-2019/%s/' % target)
+        total_scores = fetch('%s%s%s/' % (url, path, target))
 
         if not os.path.exists("cache"):
             os.makedirs("cache")
