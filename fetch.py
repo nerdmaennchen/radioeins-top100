@@ -5,28 +5,34 @@ import sys
 import re
 import os
 
+def extractText(elem):
+    if type(elem) == type([]):
+        return ", ".join([u''.join(e.findAll(text=True)).strip() for e in elem])
+    return u''.join(elem.findAll(text=True)).strip()
+
+
+def correctName(performer, title):
+    qry = ("\"" + performer + "\" \"" + title + "\"").replace(" ", "+")
+    correct_name_browser = RoboBrowser(history=True, parser="html.parser", user_agent="")
+    correct_name_browser.open('https://www.allmusic.com/search/songs/' + qry)
+    try:
+        top_result = correct_name_browser.select(".results .song")[0]
+        performer, title = extractText(top_result.select(".performers a")), extractText(top_result.select(".title")[0])[1:-1]
+    except:
+        pass
+    return performer, title
+
 def extractVotes(browser):
     tr = browser.select("div.articlesContList tr")
-    weighting = {
-        "1": 12,
-        "2": 10,
-        "3": 8,
-        "4": 7,
-        "5": 6,
-        "6": 5,
-        "7": 4,
-        "8": 3,
-        "9": 2,
-        "10": 1,
-    }
+    weighting = { "1": 12, "2": 10, "3": 8, "4": 7, "5": 6, "6": 5, "7": 4, "8": 3, "9": 2, "10": 1, }
     results = {}
     for row in tr:
-        def extractText(elem):
-            return u''.join(elem.findAll(text=True)).strip()
         try:
             rank, artist, title = row.select("td")[:3]
             rank, artist, title = extractText(rank), extractText(artist), extractText(title)
+            artist, title = correctName(artist, title);
             name = artist + " - " + title
+
             if rank in weighting:
                 results[name] = weighting[rank]
         except Exception as e:
