@@ -2,6 +2,7 @@ from robobrowser import RoboBrowser
 import pickle
 from pathlib import Path
 import sys
+import os
 
 def extractVotes(browser):
     tr = browser.select("div.articlesContList tr")
@@ -69,11 +70,14 @@ if __name__ == '__main__':
         exit(-1)
     target = sys.argv[1]
 
-    cache_file = Path(target + "_cached_results")
-    results_file = Path(target + "_results")
+    cache_file = Path("cache/%s_cached_results" % target)
+    results_file = Path("%s_results" % target)
 
     if not cache_file.is_file():
-        total_scores = fetch('https://www.radioeins.de/musik/die-100-besten-2019/' + target + '/')
+        total_scores = fetch('https://www.radioeins.de/musik/die-100-besten-2019/%s/' % target)
+
+        if not os.path.exists("cache"):
+            os.makedirs("cache")
         with cache_file.open('wb') as f:
             pickle.dump(total_scores, f, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -85,6 +89,4 @@ if __name__ == '__main__':
     scores.sort(reverse=True)
 
     with results_file.open("w") as f:
-        f.write("\n".join([str(rank+1) + " " + str(score) + " (" + str(num) + ") " + title for rank, ((score, num), title) in enumerate(scores)]))
-    
-
+        f.write("\n".join(["%d %d (%d) %s" % (rank+1, score, num, title) for rank, ((score, num), title) in enumerate(scores)]))
