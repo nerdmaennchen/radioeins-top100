@@ -1,6 +1,7 @@
 from robobrowser import RoboBrowser
 import pickle
 from pathlib import Path
+import urllib.parse
 import sys
 import re
 import os
@@ -12,7 +13,7 @@ def extractText(elem):
 
 
 def correctName(performer, title):
-    qry = ("\"" + performer + "\" \"" + title + "\"").replace(" ", "+")
+    qry = urllib.parse.quote("\"" + performer + "\" \"" + title + "\"")
     correct_name_browser = RoboBrowser(history=True, parser="html.parser", user_agent="")
     correct_name_browser.open('https://www.allmusic.com/search/songs/' + qry)
     try:
