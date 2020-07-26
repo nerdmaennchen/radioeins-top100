@@ -102,7 +102,7 @@ def load_categories(url, path):
 
 if __name__ == '__main__':
     url = 'https://www.radioeins.de'
-    path = '/musik/die-100-besten-2019/'
+    path = '/musik/die-100-besten-2020/'
 
     categories = load_categories(url, path)
     if len(sys.argv) != 2:
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         total_scores = pickle.load(f)
 
     scores = [(val, text) for text, val in total_scores.items()]
-    scores.sort(reverse=True)
+    scores.sort(key=lambda element: (-element[0][0], -element[0][1], element[1]))
 
     with results_file.open("w") as f:
         f.write("\n".join(["%d %d (%d) %s" % (rank+1, score, num, title) for rank, ((score, num), title) in enumerate(scores)]))
