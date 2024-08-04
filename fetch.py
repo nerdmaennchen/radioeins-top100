@@ -134,7 +134,7 @@ def load_categories(url, path):
 
 if __name__ == '__main__':
     url = 'https://www.radioeins.de'
-    path = '/musik/top_100/2023/'
+    path = '/musik/top_100/2024/'
 
     categories = load_categories(url, path)
     if len(sys.argv) != 2:
