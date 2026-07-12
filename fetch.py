@@ -14,7 +14,7 @@ from difflib import get_close_matches
 
 def extractText(elem):
     if type(elem) == bs4.element.ResultSet:
-        return ", ".join([u''.join(e.findAll(text=True)).strip() for e in elem])
+        return ", ".join([u''.join(e.find_all(text=True)).strip() for e in elem])
     return u''.join(elem.findAll(string=True)).strip()
 
 
@@ -56,7 +56,7 @@ def fetch(url):
     browser = RoboBrowser(history=True, parser="html.parser")
     browser.open(url)
 
-    votes = browser.select('section.layoutpagerbox a.beitrag')
+    votes = browser.select('section.count1 a.beitrag')
     followed_links = set()
 
     total_scores = {}
@@ -134,7 +134,7 @@ def load_categories(url, path):
 
 if __name__ == '__main__':
     url = 'https://www.radioeins.de'
-    path = '/musik/top_100/2024/'
+    path = '/musik/top_100/2026/'
 
     categories = load_categories(url, path)
     if len(sys.argv) != 2:
