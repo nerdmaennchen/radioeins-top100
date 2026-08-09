@@ -56,7 +56,7 @@ def fetch(url):
     browser = RoboBrowser(history=True, parser="html.parser")
     browser.open(url)
 
-    votes = browser.select('section.count1 a.beitrag')
+    votes = browser.select('section > ul.expand_list li article a.beitrag')
     followed_links = set()
 
     total_scores = {}
