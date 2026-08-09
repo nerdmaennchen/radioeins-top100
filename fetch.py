@@ -104,31 +104,15 @@ def deduplicate_scores(scores):
     return deduplicated_scores
 
 
-def cache_categories(url, path, cache_file):
-    if not cache_file.is_file():
-        browser = RoboBrowser(history=True, parser="html.parser")
-        browser.open('%s%s' % (url, path))
-        links = browser.select('a.uebersicht')
-        found_links = set();
-        for l in links:
-            ll = re.findall(f"^{path}(.*)/index.html$", l['href']) 
-            if len(ll) == 1:
-                found_links.add(ll[0])
-
-        if not os.path.exists("cache"):
-            os.makedirs("cache")
-        with cache_file.open('wb') as f:
-            pickle.dump(found_links, f, protocol=pickle.HIGHEST_PROTOCOL)
-
 def load_categories(url, path):
-    cache_file = Path("cache/categories")
-    cache_categories(url, path, cache_file)
-
-    if not cache_file.is_file():
-        cache_categories(url, path, cache_file);
-
-    with cache_file.open('rb') as f:
-        found_links = pickle.load(f)
+    browser = RoboBrowser(history=True, parser="html.parser")
+    browser.open('%s%s' % (url, path))
+    links = browser.select('a.uebersicht')
+    found_links = set();
+    for l in links:
+        ll = re.findall(f"^{path}(.*)/index.html$", l['href']) 
+        if len(ll) == 1:
+            found_links.add(ll[0])
     return found_links
 
 
@@ -152,27 +136,13 @@ if __name__ == '__main__':
         print("error: invalid category")
         exit(0);
 
-    cache_file = Path(f"cache/{target}_cached_results")
     results_file = Path(f"{target}_results")
 
-    votes = None
-    try:
-        if cache_file.is_file():
-            with cache_file.open('rb') as f:
-                votes = pickle.load(f)
-    except Exception as e:
-        print(e)
-    if votes == None or len(votes) == 0:
-        votes = fetch(f'{url}{path}{target}/')
-        if not os.path.exists("cache"):
-            os.makedirs("cache")
-        with cache_file.open('wb') as f:
-            pickle.dump(votes, f, protocol=pickle.HIGHEST_PROTOCOL)
+    votes = fetch(f'{url}{path}{target}/')
     
     ## process votes
     total_scores = process_votes(votes)
     total_scores = deduplicate_scores(total_scores)
-
 
     scores = [(val, text) for text, val in total_scores.items()]
     scores.sort(key=lambda element: (-element[0][0], -element[0][1], element[1]))
